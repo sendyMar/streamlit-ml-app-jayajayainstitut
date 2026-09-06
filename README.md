@@ -52,9 +52,6 @@ Dashboard menampilkan:
 
 **Link Dashboard:** [Looker Studio Dashboard](https://datastudio.google.com/reporting/bdf9bb17-bbab-469e-b8ea-4b1812d28909)
 
-Email: root@mail.com  
-Password: root123
-
 ## Menjalankan Sistem Machine Learning
 
 Prototype sistem prediksi dropout dibangun menggunakan **Streamlit** dan telah di-deploy ke Streamlit Community Cloud.
