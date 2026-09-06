@@ -1,0 +1,126 @@
+{
+  "best_model_name": "Random Forest",
+  "best_params": {
+    "max_depth": 20,
+    "min_samples_leaf": 1,
+    "min_samples_split": 2,
+    "n_estimators": 200
+  },
+  "accuracy": 0.7672,
+  "f1_weighted": 0.7666,
+  "roc_auc": 0.9053,
+  "classification_report": {
+    "Dropout": {
+      "precision": 0.8185483870967742,
+      "recall": 0.7147887323943662,
+      "f1-score": 0.7631578947368421,
+      "support": 284.0
+    },
+    "Enrolled": {
+      "precision": 0.5060240963855421,
+      "recall": 0.5283018867924528,
+      "f1-score": 0.5169230769230769,
+      "support": 159.0
+    },
+    "Graduate": {
+      "precision": 0.832271762208068,
+      "recall": 0.8868778280542986,
+      "f1-score": 0.8587075575027382,
+      "support": 442.0
+    },
+    "accuracy": 0.7672316384180791,
+    "macro avg": {
+      "precision": 0.7189480818967947,
+      "recall": 0.709989482413706,
+      "f1-score": 0.7129295097208858,
+      "support": 885.0
+    },
+    "weighted avg": {
+      "precision": 0.7692538894426566,
+      "recall": 0.7672316384180791,
+      "f1-score": 0.7666399454827602,
+      "support": 885.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      203,
+      44,
+      37
+    ],
+    [
+      33,
+      84,
+      42
+    ],
+    [
+      12,
+      38,
+      392
+    ]
+  ],
+  "label_mapping": {
+    "Dropout": 0,
+    "Enrolled": 1,
+    "Graduate": 2
+  },
+  "feature_cols": [
+    "Marital_status",
+    "Application_mode",
+    "Application_order",
+    "Course",
+    "Daytime_evening_attendance",
+    "Previous_qualification",
+    "Previous_qualification_grade",
+    "Nacionality",
+    "Mothers_qualification",
+    "Fathers_qualification",
+    "Mothers_occupation",
+    "Fathers_occupation",
+    "Admission_grade",
+    "Displaced",
+    "Educational_special_needs",
+    "Debtor",
+    "Tuition_fees_up_to_date",
+    "Gender",
+    "Scholarship_holder",
+    "Age_at_enrollment",
+    "International",
+    "Curricular_units_1st_sem_credited",
+    "Curricular_units_1st_sem_enrolled",
+    "Curricular_units_1st_sem_evaluations",
+    "Curricular_units_1st_sem_approved",
+    "Curricular_units_1st_sem_grade",
+    "Curricular_units_1st_sem_without_evaluations",
+    "Curricular_units_2nd_sem_credited",
+    "Curricular_units_2nd_sem_enrolled",
+    "Curricular_units_2nd_sem_evaluations",
+    "Curricular_units_2nd_sem_approved",
+    "Curricular_units_2nd_sem_grade",
+    "Curricular_units_2nd_sem_without_evaluations",
+    "Unemployment_rate",
+    "Inflation_rate",
+    "GDP",
+    "Sem1_approval_rate",
+    "Sem2_approval_rate",
+    "Total_approved",
+    "Avg_grade"
+  ],
+  "all_model_results": {
+    "Logistic Regression": {
+      "accuracy": 0.7322,
+      "f1_weighted": 0.7446,
+      "recall_dropout": 0.7007
+    },
+    "Random Forest": {
+      "accuracy": 0.7672,
+      "f1_weighted": 0.7661,
+      "recall_dropout": 0.7394
+    },
+    "Gradient Boosting": {
+      "accuracy": 0.7559,
+      "f1_weighted": 0.7571,
+      "recall_dropout": 0.743
+    }
+  }
+}
