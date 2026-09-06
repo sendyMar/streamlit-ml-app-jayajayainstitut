@@ -79,7 +79,7 @@ Aplikasi akan terbuka di browser pada `http://localhost:8501`.
 2. **📊 Model Performance** — Lihat metrik evaluasi model, confusion matrix, dan feature importance.
 3. **📋 Tentang** — Informasi tentang proyek dan teknologi yang digunakan.
 
-**Link Prototype (Streamlit Cloud):** [Streamlit App](link_akan_ditambahkan_setelah_deploy)
+**Link Prototype (Streamlit Cloud):** [Streamlit App](https://app-ml-app-jayajayainstitut-arjlpkdx3cykrdd2bkaysw.streamlit.app/)
 
 ## Conclusion
 
