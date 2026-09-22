@@ -1,6 +1,7 @@
 """
 Aplikasi Prediksi Dropout Siswa - Jaya Jaya Institut
 Prototype Machine Learning menggunakan Streamlit
+Binary Classification: Dropout (1) vs Graduate (0)
 Author: Failasuf Indi M
 """
 
@@ -76,10 +77,6 @@ st.markdown("""
     .result-graduate {
         background: linear-gradient(135deg, #26de81 0%, #20bf6b 100%);
         color: white;
-    }
-    .result-enrolled {
-        background: linear-gradient(135deg, #fed330 0%, #f7b731 100%);
-        color: #333;
     }
     .result-card h2 {
         font-size: 2.2rem;
@@ -202,7 +199,6 @@ def load_artifacts():
 
     model = joblib.load(os.path.join(model_dir, 'model.joblib'))
     scaler = joblib.load(os.path.join(model_dir, 'scaler.joblib'))
-    label_encoder = joblib.load(os.path.join(model_dir, 'label_encoder.joblib'))
     feature_names = joblib.load(os.path.join(model_dir, 'feature_names.joblib'))
 
     eval_path = os.path.join(model_dir, 'evaluation_results.json')
@@ -214,10 +210,10 @@ def load_artifacts():
     if os.path.exists(feat_imp_path):
         feat_imp = pd.read_csv(feat_imp_path)
 
-    return model, scaler, label_encoder, feature_names, eval_results, feat_imp
+    return model, scaler, feature_names, eval_results, feat_imp
 
 try:
-    model, scaler, label_encoder, feature_names, eval_results, feat_imp = load_artifacts()
+    model, scaler, feature_names, eval_results, feat_imp = load_artifacts()
     model_loaded = True
 except Exception as e:
     model_loaded = False
@@ -230,7 +226,7 @@ with st.sidebar:
     st.markdown("### 🎯 Navigasi")
     page = st.radio(
         "Pilih halaman:",
-        ["🔮 Prediksi Dropout", "📊 Model Performance", "📋 Tentang"],
+        ["🔮 Prediksi Individual", "📂 Prediksi Batch (CSV)", "📊 Model Performance", "📋 Tentang"],
         label_visibility="collapsed"
     )
 
@@ -276,7 +272,7 @@ MARITAL_MAP = {
 # ============================================================
 # PAGE: PREDIKSI
 # ============================================================
-if page == "🔮 Prediksi Dropout" and model_loaded:
+if page == "🔮 Prediksi Individual" and model_loaded:
     # Header
     st.markdown("""
     <div class="main-header">
@@ -287,7 +283,7 @@ if page == "🔮 Prediksi Dropout" and model_loaded:
 
     st.markdown("""
     <div class="info-box">
-        💡 <strong>Cara Penggunaan:</strong> Masukkan data profil siswa pada form di bawah, lalu klik tombol <strong>"🔍 Prediksi Sekarang"</strong> untuk melihat prediksi status siswa.
+        💡 <strong>Cara Penggunaan:</strong> Masukkan data profil siswa pada form di bawah, lalu klik tombol <strong>"🔍 Prediksi Sekarang"</strong> untuk melihat prediksi apakah siswa berisiko <strong>Dropout</strong> atau berpotensi <strong>Graduate</strong>.
     </div>
     """, unsafe_allow_html=True)
 
@@ -465,7 +461,10 @@ if page == "🔮 Prediksi Dropout" and model_loaded:
         prediction = model.predict(input_scaled)[0]
         probabilities = model.predict_proba(input_scaled)[0]
 
-        predicted_label = label_encoder.inverse_transform([prediction])[0]
+        # prediction: 1 = Dropout, 0 = Graduate
+        predicted_label = "Dropout" if prediction == 1 else "Graduate"
+        prob_dropout = probabilities[1]   # kelas 1 = Dropout
+        prob_graduate = probabilities[0]  # kelas 0 = Graduate
 
         st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
         st.markdown('<p class="section-header">📊 Hasil Prediksi</p>', unsafe_allow_html=True)
@@ -475,14 +474,10 @@ if page == "🔮 Prediksi Dropout" and model_loaded:
             card_class = "result-dropout"
             emoji = "🚨"
             message = "Siswa ini memiliki risiko TINGGI untuk dropout!"
-        elif predicted_label == "Graduate":
+        else:
             card_class = "result-graduate"
             emoji = "🎉"
             message = "Siswa ini diprediksi akan berhasil lulus!"
-        else:
-            card_class = "result-enrolled"
-            emoji = "📚"
-            message = "Siswa ini diprediksi masih dalam proses belajar."
 
         st.markdown(f"""
         <div class="result-card {card_class}">
@@ -491,22 +486,27 @@ if page == "🔮 Prediksi Dropout" and model_loaded:
         </div>
         """, unsafe_allow_html=True)
 
-        # Probability bars
+        # Probability display (2 kelas: Dropout & Graduate)
         st.markdown("#### Distribusi Probabilitas")
-        cols = st.columns(3)
-        colors = {"Dropout": "#ff6b6b", "Enrolled": "#f7b731", "Graduate": "#26de81"}
+        col1, col2 = st.columns(2)
 
-        for i, (cls, prob) in enumerate(zip(label_encoder.classes_, probabilities)):
-            with cols[i]:
-                pct = prob * 100
-                color = colors.get(cls, "#4a90d9")
-                st.markdown(f"""
-                <div class="metric-card">
-                    <h3 style="color: {color}">{pct:.1f}%</h3>
-                    <p>{cls}</p>
-                </div>
-                """, unsafe_allow_html=True)
-                st.progress(prob)
+        with col1:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3 style="color: #ff6b6b">{prob_dropout*100:.1f}%</h3>
+                <p>🚨 Dropout</p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.progress(float(prob_dropout))
+
+        with col2:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3 style="color: #26de81">{prob_graduate*100:.1f}%</h3>
+                <p>🎓 Graduate</p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.progress(float(prob_graduate))
 
         # Risk factors explanation
         if predicted_label == "Dropout":
@@ -518,6 +518,114 @@ if page == "🔮 Prediksi Dropout" and model_loaded:
             - 📊 **Monitoring berkala** — Jadwalkan evaluasi performa mingguan
             - 🤝 **Program mentoring** — Pasangkan dengan mahasiswa senior sebagai mentor
             """)
+        else:
+            st.success("✅ **Siswa ini diprediksi pada jalur yang baik.** Tetap lakukan monitoring rutin untuk memastikan performa akademik tetap terjaga.")
+
+# ============================================================
+# PAGE: PREDIKSI BATCH
+# ============================================================
+elif page == "📂 Prediksi Batch (CSV)" and model_loaded:
+    st.markdown("""
+    <div class="main-header">
+        <h1>📂 Prediksi Batch (Siswa Enrolled)</h1>
+        <p>Gunakan fitur ini untuk memprediksi risiko dropout dari sekumpulan data siswa (contoh: siswa yang masih Enrolled)</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="info-box">
+        💡 <strong>Cara Penggunaan:</strong> Upload file CSV yang berisi data siswa (misalnya <code>enrolled_data.csv</code>). 
+        Sistem akan memproses semua baris sekaligus dan memberikan daftar siswa mana saja yang memiliki probabilitas tinggi untuk Dropout.
+    </div>
+    """, unsafe_allow_html=True)
+
+    uploaded_file = st.file_uploader("Upload file CSV (Gunakan enrolled_data.csv)", type=["csv"])
+
+    if uploaded_file is not None:
+        try:
+            df_batch = pd.read_csv(uploaded_file)
+            st.success(f"File berhasil di-upload! Memproses {len(df_batch)} baris data...")
+
+            # Pastikan fitur engineered sudah ada, jika belum buatkan
+            if 'Sem1_approval_rate' not in df_batch.columns:
+                df_batch['Sem1_approval_rate'] = np.where(
+                    df_batch['Curricular_units_1st_sem_enrolled'] > 0,
+                    df_batch['Curricular_units_1st_sem_approved'] / df_batch['Curricular_units_1st_sem_enrolled'],
+                    0
+                )
+            if 'Sem2_approval_rate' not in df_batch.columns:
+                df_batch['Sem2_approval_rate'] = np.where(
+                    df_batch['Curricular_units_2nd_sem_enrolled'] > 0,
+                    df_batch['Curricular_units_2nd_sem_approved'] / df_batch['Curricular_units_2nd_sem_enrolled'],
+                    0
+                )
+            if 'Total_approved' not in df_batch.columns:
+                df_batch['Total_approved'] = df_batch['Curricular_units_1st_sem_approved'] + df_batch['Curricular_units_2nd_sem_approved']
+            if 'Avg_grade' not in df_batch.columns:
+                df_batch['Avg_grade'] = (df_batch['Curricular_units_1st_sem_grade'] + df_batch['Curricular_units_2nd_sem_grade']) / 2
+
+            # Ekstrak fitur sesuai model
+            X_batch = df_batch[feature_names]
+
+            # Prediksi
+            X_scaled = scaler.transform(X_batch)
+            predictions = model.predict(X_scaled)
+            probs = model.predict_proba(X_scaled)[:, 1] # Ambil probabilitas untuk kelas Dropout (1)
+
+            # Tambahkan hasil ke dataframe
+            df_result = df_batch.copy()
+            df_result['Prediction'] = ["Dropout" if p == 1 else "Graduate" for p in predictions]
+            df_result['Dropout_Probability'] = probs
+
+            # Tampilkan Ringkasan
+            total = len(df_result)
+            total_dropout = (df_result['Prediction'] == 'Dropout').sum()
+            total_graduate = total - total_dropout
+
+            st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
+            st.markdown('### 📊 Ringkasan Prediksi Batch')
+
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown(f'<div class="metric-card"><h3>{total}</h3><p>Total Siswa Diproses</p></div>', unsafe_allow_html=True)
+            with col2:
+                st.markdown(f'<div class="metric-card"><h3>{total_dropout}</h3><p style="color: #ff6b6b;">Berisiko Dropout</p></div>', unsafe_allow_html=True)
+            with col3:
+                st.markdown(f'<div class="metric-card"><h3>{total_graduate}</h3><p style="color: #26de81;">Potensi Lulus</p></div>', unsafe_allow_html=True)
+
+            st.markdown("---")
+
+            # Tampilkan Tabel Siswa Berisiko Tinggi
+            st.markdown('### 🚨 Daftar Siswa Berisiko Dropout Tinggi')
+            df_risk = df_result[df_result['Prediction'] == 'Dropout'].sort_values(by='Dropout_Probability', ascending=False)
+            
+            if len(df_risk) > 0:
+                # Tampilkan kolom penting saja di tabel preview
+                display_cols = ['Course', 'Age_at_enrollment', 'Tuition_fees_up_to_date', 
+                              'Sem1_approval_rate', 'Sem2_approval_rate', 'Dropout_Probability']
+                
+                # Format tabel agar lebih mudah dibaca
+                df_display = df_risk[display_cols].copy()
+                df_display['Dropout_Probability'] = df_display['Dropout_Probability'].apply(lambda x: f"{x*100:.1f}%")
+                df_display['Course'] = df_display['Course'].map(COURSE_MAP).fillna(df_display['Course'])
+                
+                st.dataframe(df_display, use_container_width=True)
+
+                # Tombol Download Hasil
+                csv_data = df_result.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="⬇️ Download Hasil Prediksi Lengkap (CSV)",
+                    data=csv_data,
+                    file_name='hasil_prediksi_batch.csv',
+                    mime='text/csv',
+                    type="primary"
+                )
+            else:
+                st.success("🎉 Tidak ada siswa yang terdeteksi berisiko tinggi untuk Dropout dalam data ini.")
+
+        except Exception as e:
+            st.error(f"Terjadi kesalahan saat memproses file: {e}")
+            st.info("Pastikan file CSV memiliki kolom yang sama dengan dataset training awal.")
 
 # ============================================================
 # PAGE: MODEL PERFORMANCE
@@ -526,7 +634,7 @@ elif page == "📊 Model Performance" and model_loaded:
     st.markdown("""
     <div class="main-header">
         <h1>📊 Performa Model</h1>
-        <p>Evaluasi dan metrik model Machine Learning yang digunakan</p>
+        <p>Evaluasi dan metrik model Machine Learning — Binary Classification: Dropout vs Graduate</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -555,14 +663,30 @@ elif page == "📊 Model Performance" and model_loaded:
         </div>
         """, unsafe_allow_html=True)
     with col4:
+        recall_do = eval_results.get('recall_dropout', 0) or 0
         st.markdown(f"""
         <div class="metric-card">
-            <h3>{eval_results.get('best_model_name', 'N/A')}</h3>
-            <p>Best Model</p>
+            <h3>{recall_do*100:.1f}%</h3>
+            <p>Recall Dropout</p>
         </div>
         """, unsafe_allow_html=True)
 
     st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
+
+    # Data info
+    data_info = eval_results.get('data_info', {})
+    if data_info:
+        st.markdown('<p class="section-header">📊 Info Dataset</p>', unsafe_allow_html=True)
+        ci1, ci2, ci3, ci4 = st.columns(4)
+        with ci1:
+            st.metric("Total Siswa (Full)", f"{data_info.get('total_students', 0):,}")
+        with ci2:
+            st.metric("Siswa Enrolled (Dipisahkan)", f"{data_info.get('enrolled_students', 0):,}")
+        with ci3:
+            st.metric("Dropout (Training)", f"{data_info.get('dropout_count', 0):,}")
+        with ci4:
+            st.metric("Graduate (Training)", f"{data_info.get('graduate_count', 0):,}")
+        st.info("ℹ️ Siswa berstatus **Enrolled** dipisahkan dari proses training karena belum memiliki label akhir. Data ini disimpan di `enrolled_data.csv` untuk prediksi masa depan.")
 
     # Classification report
     col_left, col_right = st.columns(2)
@@ -570,7 +694,7 @@ elif page == "📊 Model Performance" and model_loaded:
         st.markdown('<p class="section-header">📋 Classification Report</p>', unsafe_allow_html=True)
         report = eval_results.get('classification_report', {})
         report_data = []
-        for cls in ['Dropout', 'Enrolled', 'Graduate']:
+        for cls in ['Graduate', 'Dropout']:
             if cls in report:
                 r = report[cls]
                 report_data.append({
@@ -628,16 +752,16 @@ elif page == "📊 Model Performance" and model_loaded:
             import matplotlib.pyplot as plt
             import seaborn as sns
 
-            fig, ax = plt.subplots(figsize=(6, 5))
+            fig, ax = plt.subplots(figsize=(5, 4))
             sns.heatmap(
                 cm, annot=True, fmt='d', cmap='Blues',
-                xticklabels=label_encoder.classes_,
-                yticklabels=label_encoder.classes_,
+                xticklabels=['Graduate', 'Dropout'],
+                yticklabels=['Graduate', 'Dropout'],
                 ax=ax, linewidths=0.5, linecolor='white'
             )
             ax.set_xlabel('Predicted', fontsize=11)
             ax.set_ylabel('Actual', fontsize=11)
-            ax.set_title('Confusion Matrix', fontsize=13, fontweight='bold')
+            ax.set_title('Confusion Matrix (Binary)', fontsize=13, fontweight='bold')
             plt.tight_layout()
             st.pyplot(fig)
 
@@ -668,17 +792,21 @@ elif page == "📋 Tentang":
     berbasis **Machine Learning** untuk mendeteksi siswa yang berpotensi dropout sedini mungkin.
 
     ### 🎯 Tujuan
-    - Memprediksi status siswa: **Dropout**, **Enrolled**, atau **Graduate**
+    - Memprediksi apakah seorang siswa akan **Dropout** atau **Graduate** (binary classification)
     - Memberikan *early warning* agar siswa berisiko dapat diberikan bimbingan khusus
     - Membantu institusi dalam mengambil keputusan berbasis data
 
-    ### 📊 Dataset
-    Dataset berisi **4.424 data siswa** dengan **36 fitur** yang mencakup:
+    ### 📊 Dataset & Pendekatan
+    Dataset berisi data siswa dengan **36 fitur** yang mencakup:
     - Informasi demografis (usia, gender, status pernikahan)
     - Latar belakang keluarga (pendidikan & pekerjaan orang tua)
     - Data akademik (nilai masuk, performa semester 1 & 2)
     - Status finansial (beasiswa, tunggakan, status pembayaran)
     - Kondisi makroekonomi (unemployment, inflation, GDP)
+
+    **Catatan penting:** Hanya siswa berstatus **Dropout** dan **Graduate** yang digunakan untuk training model.
+    Siswa berstatus **Enrolled** (belum memiliki label akhir) dipisahkan dan disimpan di `enrolled_data.csv`
+    untuk keperluan prediksi masa depan.
 
     ### 🛠️ Teknologi
     | Komponen | Teknologi |

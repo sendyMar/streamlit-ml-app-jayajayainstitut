@@ -1,0 +1,15 @@
+# Folder yang tidak perlu diupload ke repo Streamlit
+failasuf_dicoding-dashboard/
+failasuf_dicoding-video/
+__pycache__/
+
+# Dataset besar (tidak dipakai di aplikasi Streamlit)
+data.csv
+
+# File notebook / script (Opsional: di-ignore agar repo khusus aplikasi saja)
+notebook.ipynb
+create_notebook.py
+train_pipeline.py
+
+# JANGAN IGNORE enrolled_data.csv karena dipakai untuk fitur Batch Prediction
+!enrolled_data.csv

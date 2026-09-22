@@ -8,14 +8,14 @@ Jumlah dropout yang tinggi ini tentunya menjadi salah satu masalah yang besar un
 
 ### Permasalahan Bisnis
 
-1. **Tingginya tingkat dropout** — Dari 4.424 siswa, 32.1% (1.421 siswa) mengalami dropout, yang merugikan reputasi dan keberlanjutan institusi.
-2. **Tidak ada sistem deteksi dini** — Institusi belum memiliki mekanisme otomatis untuk mengidentifikasi siswa yang berisiko dropout.
+1. **Tingginya angka siswa yang tidak menyelesaikan pendidikan (dropout)** — Kondisi ini merugikan reputasi institusi dan berdampak pada keberlanjutan operasional Jaya Jaya Institut.
+2. **Tidak ada sistem deteksi dini** — Institusi belum memiliki mekanisme otomatis untuk mengidentifikasi siswa yang berisiko dropout sedini mungkin.
 3. **Kurangnya pemahaman data** — Pihak manajemen membutuhkan dashboard untuk memahami faktor-faktor yang memengaruhi performa dan risiko dropout siswa.
 
 ### Cakupan Proyek
 
 1. Analisis data eksploratif (EDA) untuk memahami faktor-faktor yang memengaruhi dropout.
-2. Pembuatan model machine learning (multi-class classification: Dropout, Enrolled, Graduate) untuk memprediksi status siswa.
+2. Pembuatan model machine learning (**binary classification: Dropout vs Graduate**) untuk memprediksi potensi seorang siswa akan dropout atau lulus.
 3. Pembuatan business dashboard menggunakan Google Looker Studio untuk monitoring performa siswa.
 4. Pembuatan prototype sistem prediksi menggunakan Streamlit yang di-deploy ke Streamlit Community Cloud.
 5. Rekomendasi action items berdasarkan hasil analisis.
@@ -59,8 +59,8 @@ Prototype sistem prediksi dropout dibangun menggunakan **Streamlit** dan telah d
 ### Cara Menjalankan Secara Lokal
 
 ```bash
-# Pastikan sudah di direktori submission
-cd submission1
+# Pastikan sudah di direktori submission2
+cd submission2
 
 # Install dependencies
 pip install -r requirements.txt
@@ -72,40 +72,40 @@ streamlit run app.py
 Aplikasi akan terbuka di browser pada `http://localhost:8501`.
 
 ### Fitur Aplikasi
-1. **🔮 Prediksi Dropout** — Input data profil siswa dan dapatkan prediksi status (Dropout/Enrolled/Graduate) beserta probabilitasnya.
+1. **🔮 Prediksi Dropout** — Input data profil siswa dan dapatkan prediksi apakah siswa berisiko **Dropout** atau berpotensi **Graduate**, beserta probabilitasnya.
 2. **📊 Model Performance** — Lihat metrik evaluasi model, confusion matrix, dan feature importance.
 3. **📋 Tentang** — Informasi tentang proyek dan teknologi yang digunakan.
 
 **Link Prototype (Streamlit Cloud):** [Streamlit App](https://app-ml-app-jayajayainstitut-arjlpkdx3cykrdd2bkaysw.streamlit.app/)
+**Link Repository GitHub:** [GitHub Repo](https://github.com/sendyMar/streamlit-ml-app-jayajayainstitut)
 
 ## Conclusion
 
 ### Temuan Utama
 
-1. **Distribusi Data:** Dari 4.424 siswa, 32.1% mengalami dropout (1.421), 49.9% lulus (2.209), dan 17.9% masih terdaftar (794). Dataset menunjukkan adanya class imbalance yang ditangani dengan SMOTE.
+1. **Distribusi Data:** Dari total 4.424 siswa dalam dataset, 49.9% berstatus Graduate (2.209), 32.1% Dropout (1.421), dan 17.9% masih berstatus Enrolled (794). Siswa **Enrolled dipisahkan** dari proses pemodelan karena belum memiliki label akhir — data ini disimpan di `enrolled_data.csv` untuk keperluan prediksi masa depan.
 
-2. **Faktor Kunci Dropout:**
-   - **Performa Akademik (paling dominan):** Siswa dropout rata-rata hanya menyelesaikan ~2.5 mata kuliah per semester dibanding ~6.2 untuk yang lulus. Rasio approval rate semester 2 menjadi fitur paling penting (importance: 0.0992).
-   - **Faktor Finansial:** 32% siswa dropout belum melunasi SPP (vs 1% Graduate), hanya 9% mendapat beasiswa (vs 38% Graduate), dan 22% berstatus debtor (vs 5% Graduate).
+2. **Faktor Kunci Dropout (dari EDA):**
+   - **Performa Akademik (paling dominan):** Siswa dropout rata-rata hanya menyelesaikan ~2.5 mata kuliah per semester dibanding ~6.2 untuk yang lulus. Nilai rata-rata semester 1 siswa dropout (7.26) jauh lebih rendah dari Graduate (12.64).
+   - **Faktor Finansial:** Hanya 68% siswa dropout yang SPP-nya terbayar lunas (vs 99% Graduate), hanya 9% mendapat beasiswa (vs 38% Graduate), dan 22% berstatus debtor (vs 5% Graduate).
    - **Usia:** Rata-rata usia dropout (26.1 tahun) lebih tinggi dibanding yang lulus (21.8 tahun).
    - **Program Studi:** Biofuel Production Technologies (66.7%), Equinculture (55.3%), dan Informatics Engineering (54.1%) memiliki dropout rate tertinggi.
 
-3. **Performa Model Machine Learning:**
-   - Model terbaik: **Random Forest** dengan hyperparameter tuning
-   - Accuracy: **76.72%**
-   - F1-Score (Weighted): **76.66%**
-   - ROC-AUC: **90.53%**
-   - Recall Dropout: **71.48%** (model berhasil mendeteksi ~71% dari seluruh siswa dropout)
+3. **Performa Model Machine Learning (Binary Classification):**
+   - Model terbaik: **Logistic Regression** dengan hyperparameter tuning (C=10, solver=lbfgs)
+   - Target: Binary — `1 = Dropout`, `0 = Graduate`
+   - Accuracy: **93.25%**
+   - F1-Score (Weighted): **93.28%**
+   - ROC-AUC: **97.37%**
+   - Recall Dropout: **94.01%** (model berhasil mendeteksi ~94% dari seluruh siswa dropout)
 
-4. **Top 5 Feature Importance:**
+4. **Perbandingan Model:**
 
-   | Rank | Feature | Importance |
-   |------|---------|------------|
-   | 1 | Sem2_approval_rate | 0.0992 |
-   | 2 | Curricular_units_2nd_sem_approved | 0.0744 |
-   | 3 | Total_approved | 0.0721 |
-   | 4 | Sem1_approval_rate | 0.0608 |
-   | 5 | Avg_grade | 0.0543 |
+   | Model | Accuracy | F1 (Weighted) | Recall Dropout |
+   |-------|----------|----------------|----------------|
+   | Logistic Regression (Tuned) ⭐ | **93.25%** | **93.28%** | **94.01%** |
+   | Gradient Boosting | 92.84% | 92.85% | 92.25% |
+   | Random Forest | 92.01% | 92.02% | 90.14% |
 
 ### Rekomendasi Action Items
 
@@ -114,6 +114,7 @@ Berdasarkan hasil analisis data dan model machine learning, berikut rekomendasi 
 1. **🎯 Implementasi Early Warning System**
    - Deploy model prediksi dropout sebagai sistem deteksi dini yang berjalan setiap akhir semester.
    - Siswa dengan probabilitas dropout > 60% segera ditandai untuk intervensi.
+   - Data siswa Enrolled dapat diprediksi menggunakan model yang sama untuk antisipasi dini.
 
 2. **📚 Program Bimbingan Akademik Intensif**
    - Fokus pada siswa dengan approval rate rendah (< 50%) di semester 1.
@@ -130,9 +131,10 @@ Berdasarkan hasil analisis data dan model machine learning, berikut rekomendasi 
    - Pertimbangkan penambahan program orientasi dan mentoring peer-to-peer di program-program tersebut.
 
 5. **👥 Program Mentoring dan Konseling**
-   - Sediakan program mentoring oleh mahasiswa senior untuk mahasiswa baru, terutama yang berusia di atas 25 tahun (kelompok usia dengan risiko dropout tertinggi).
+   - Sediakan program mentoring oleh mahasiswa senior untuk mahasiswa baru, terutama yang berusia di atas 25 tahun (kelompok usia dengan risiko dropout lebih tinggi).
    - Lakukan konseling rutin setiap bulan untuk siswa yang teridentifikasi berisiko.
 
 6. **📊 Monitoring Berkala dengan Dashboard**
    - Gunakan dashboard yang telah dibuat untuk monitoring performa siswa secara real-time.
    - Lakukan review data setiap akhir semester untuk memperbarui strategi intervensi.
+
