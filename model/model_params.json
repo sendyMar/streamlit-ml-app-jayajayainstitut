@@ -1,0 +1,10 @@
+{
+  "classes": [
+    0,
+    1
+  ],
+  "C": 10,
+  "solver": "lbfgs",
+  "max_iter": 1000,
+  "n_features_in": 40
+}

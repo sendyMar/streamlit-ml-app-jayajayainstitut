@@ -197,7 +197,21 @@ def load_artifacts():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     model_dir = os.path.join(base_dir, 'model')
 
-    model = joblib.load(os.path.join(model_dir, 'model.joblib'))
+    # Rebuild model from saved coefficients (version-agnostic)
+    from sklearn.linear_model import LogisticRegression
+    with open(os.path.join(model_dir, 'model_params.json'), 'r') as f:
+        model_params = json.load(f)
+    model = LogisticRegression(
+        C=model_params['C'],
+        solver=model_params['solver'],
+        max_iter=model_params['max_iter'],
+        random_state=42
+    )
+    model.classes_ = np.array(model_params['classes'])
+    model.coef_ = np.load(os.path.join(model_dir, 'coef.npy'))
+    model.intercept_ = np.load(os.path.join(model_dir, 'intercept.npy'))
+    model.n_features_in_ = model_params['n_features_in']
+
     scaler = joblib.load(os.path.join(model_dir, 'scaler.joblib'))
     feature_names = joblib.load(os.path.join(model_dir, 'feature_names.joblib'))
 
